@@ -66,19 +66,49 @@ class FitnessApp:
                         fitness_data
                     )
 
-                st.subheader("Generated Fitness Plan")
-
-                st.write(response)
-
-                st.download_button(
-                    label="📥 Download Plan",
-                    data=response,
-                    file_name="fitness_plan.txt",
-                    mime="text/plain"
-                )
+                # Store data in session
+                st.session_state["fitness_plan"] = response
+                st.session_state["fitness_data"] = fitness_data
 
             except Exception as e:
 
-                print(
-                    f"Exception occurred while getting the response from LLM: {e}"
+                st.error(
+                    f"Exception occurred while getting the response "
+                    f"from LLM: {e}"
                 )
+
+        if "fitness_plan" in st.session_state:
+
+            st.subheader("Generated Fitness Plan")
+
+            st.markdown(
+                st.session_state["fitness_plan"]
+            )
+
+            st.download_button(
+                label="📥 Download Plan",
+                data=st.session_state["fitness_plan"],
+                file_name="fitness_plan.txt",
+                mime="text/plain"
+            )
+
+            if st.button("🔄 Regenerate Plan"):
+
+                try:
+
+                    with st.spinner("Regenerating your plan..."):
+
+                        response = self.groq_service.generate_response(
+                            st.session_state["fitness_data"]
+                        )
+
+                    st.session_state["fitness_plan"] = response
+
+                    st.rerun()
+
+                except Exception as e:
+
+                    st.error(
+                        f"Exception occurred while regenerating "
+                        f"the plan: {e}"
+                    )
